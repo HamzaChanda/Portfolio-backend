@@ -2,7 +2,7 @@ import express from 'express';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import cors from 'cors';
-
+const PORT = process.env.PORT || 5000;
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -21,16 +21,31 @@ app.post('/send-email', async (req, res) => {
 
   try {
     await transporter.sendMail({
-      from: email,
-      to: process.env.EMAIL_USER,
+      from: `"${name}" <${process.env.EMAIL_USER}>`, // send from your Gmail
+      to: process.env.EMAIL_USER,                    // your inbox
+      replyTo: email,                                 // reply goes to the sender
       subject: `Portfolio Contact from ${name}`,
-      text: message,
+      text: `You got a new message from your portfolio:
+Name: ${name}
+Email: ${email}
+Message:
+${message}
+      `,
+      html: `
+        <h2>New Portfolio Message</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+      `,
     });
+
     res.status(200).json({ message: 'Email sent successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to send email' });
   }
 });
-
-app.listen(5000, () => console.log('Server running on port 5000'));
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
